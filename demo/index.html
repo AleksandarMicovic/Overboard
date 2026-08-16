@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overboard — test page</title>
+<style>
+  :root {
+    --bg: #f6f5f3;
+    --panel: #fff;
+    --line: #e2ded7;
+    --text: #23211e;
+    --muted: #6d6862;
+    --accent: #7a5c3e;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171614; --panel: #201e1b; --line: #322e29;
+      --text: #ece8e2; --muted: #9a938a; --accent: #c9a37a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 2px; letter-spacing: -0.01em; }
+  h1 span { color: var(--muted); font-weight: 400; font-size: 14px; }
+  h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin: 0 0 10px; font-weight: 600;
+  }
+  .layout {
+    display: grid; gap: 20px; max-width: 1180px; margin: 18px auto 0;
+    grid-template-columns: minmax(280px, 460px) 1fr;
+    align-items: start;
+  }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px; margin-bottom: 14px;
+  }
+  .board-card { padding: 14px; position: sticky; top: 24px; }
+  button, select, input[type="text"], textarea {
+    font: inherit; color: inherit; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px;
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  textarea, input[type="text"] { width: 100%; font-family: var(--mono); font-size: 12.5px; }
+  textarea { resize: vertical; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .row > label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+  .swatch {
+    width: 40px; height: 40px; border-radius: 7px; cursor: pointer;
+    border: 2px solid transparent; padding: 0; overflow: hidden;
+    display: grid; grid-template-columns: 1fr 1fr;
+  }
+  .swatch[aria-pressed="true"] { border-color: var(--accent); }
+  .swatch i { display: block; }
+  code, .mono { font-family: var(--mono); font-size: 12.5px; }
+  #fenOut {
+    display: block; word-break: break-all; color: var(--muted);
+    background: var(--bg); padding: 7px 9px; border-radius: 6px; margin-top: 8px;
+  }
+  #moveList {
+    max-height: 190px; overflow-y: auto; margin-top: 10px;
+    display: flex; flex-wrap: wrap; gap: 2px 4px; align-content: start;
+  }
+  #moveList button {
+    border: 0; background: none; padding: 2px 5px; border-radius: 4px;
+    font-family: var(--mono); font-size: 12.5px;
+  }
+  #moveList button[aria-current="true"] { background: var(--accent); color: #fff; }
+  #moveList .num { color: var(--muted); padding: 2px 1px 2px 6px; font-family: var(--mono); font-size: 12.5px; }
+  #log {
+    height: 210px; overflow-y: auto; background: var(--bg);
+    border-radius: 6px; padding: 8px 10px; font-family: var(--mono); font-size: 12px;
+  }
+  #log div { padding: 1px 0; border-bottom: 1px solid var(--line); }
+  #log b { display: inline-block; min-width: 88px; color: var(--accent); }
+  .hint { color: var(--muted); font-size: 12.5px; margin: 8px 0 0; }
+  .status { color: var(--muted); font-size: 12.5px; min-height: 1.5em; margin-top: 8px; }
+  .status.bad { color: #c0392b; }
+  @media (prefers-color-scheme: dark) { .status.bad { color: #ef8073; } }
+</style>
+</head>
+<body>
+
+<h1>Overboard <span>— every option and method, on one page</span></h1>
+
+<div class="layout">
+  <div>
+    <div class="card board-card">
+      <div id="board"></div>
+      <code id="fenOut"></code>
+    </div>
+  </div>
+
+  <div>
+    <!-- Playback -->
+    <div class="card">
+      <h2>PGN &amp; playback</h2>
+      <textarea id="pgnIn" rows="5" spellcheck="false"></textarea>
+      <div class="row">
+        <button class="primary" id="loadPgn">Load PGN</button>
+        <select id="presetPgn">
+          <option value="">Load an example…</option>
+          <option value="opera">Morphy — Opera Game (1858)</option>
+          <option value="immortal">Anderssen — Immortal Game (1851)</option>
+          <option value="annotated">Annotated (comments + NAGs)</option>
+          <option value="promo">En passant &amp; underpromotion</option>
+        </select>
+      </div>
+      <div class="row">
+        <button id="first">|◀</button>
+        <button id="prev">◀</button>
+        <button id="next">▶</button>
+        <button id="last">▶|</button>
+        <input type="range" id="plySlider" min="0" max="0" value="0" style="flex:1;min-width:120px">
+        <span class="mono" id="plyOut">0 / 0</span>
+      </div>
+      <div id="moveList"></div>
+      <p class="status" id="pgnStatus"></p>
+    </div>
+
+    <!-- Position -->
+    <div class="card">
+      <h2>Position (FEN)</h2>
+      <input type="text" id="fenIn" spellcheck="false" placeholder="paste a FEN…">
+      <div class="row">
+        <button class="primary" id="loadFen">Load FEN</button>
+        <button id="resetBtn">Starting position</button>
+        <button id="clearBtn">Clear board</button>
+        <select id="presetFen">
+          <option value="">Example positions…</option>
+          <option value="r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1">Kiwipete</option>
+          <option value="4k3/8/8/b7/3N4/8/3N4/4K3 w - - 0 1">Pinned knight (try Nf3)</option>
+          <option value="8/8/8/KPp4r/8/8/8/7k w - c6 0 1">Illegal en passant (try bxc6)</option>
+          <option value="7k/5Q2/6K1/8/8/8/8/8 b - - 0 1">Stalemate</option>
+          <option value="4k3/P7/8/8/8/8/8/4K3 w - - 0 1">Promotion (try a8=N)</option>
+        </select>
+      </div>
+      <p class="status" id="fenStatus"></p>
+    </div>
+
+    <!-- Moves -->
+    <div class="card">
+      <h2>Make a move</h2>
+      <div class="row">
+        <label>from <select id="fromSq"></select></label>
+        <label>to <select id="toSq"></select></label>
+        <label>promote
+          <select id="promo">
+            <option value="q">Queen</option><option value="r">Rook</option>
+            <option value="b">Bishop</option><option value="n">Knight</option>
+          </select>
+        </label>
+        <button id="coordMove">Move</button>
+      </div>
+      <div class="row">
+        <input type="text" id="sanIn" placeholder="algebraic, e.g. Nf3 or O-O" style="flex:1;min-width:160px">
+        <button id="sanMove">Play</button>
+      </div>
+      <p class="status" id="moveStatus"></p>
+    </div>
+
+    <!-- Appearance -->
+    <div class="card">
+      <h2>Appearance</h2>
+      <div class="swatches" id="boardThemes"></div>
+      <div class="row">
+        <label>custom light <input type="color" id="lightPick" value="#f0d9b5"></label>
+        <label>custom dark <input type="color" id="darkPick" value="#b58863"></label>
+      </div>
+      <div class="row">
+        <label>pieces <select id="pieceTheme"></select></label>
+        <button id="flipBtn">Flip board</button>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="coordsToggle"> show coordinates</label>
+        <label><input type="checkbox" id="hlToggle" checked> highlight last move</label>
+      </div>
+      <div class="row">
+        <label style="flex:1">animation
+          <input type="range" id="animRange" min="0" max="800" step="20" value="200" style="flex:1">
+          <span class="mono" id="animOut">200ms</span>
+        </label>
+      </div>
+      <p class="hint">Coordinates are off by default, and the default board theme is brown.</p>
+    </div>
+
+    <!-- Events -->
+    <div class="card">
+      <h2>Event log</h2>
+      <div id="log"></div>
+      <div class="row">
+        <button id="clearLog">Clear</button>
+        <label><input type="checkbox" id="logPosition"> include <code>position</code></label>
+        <label><input type="checkbox" id="jiggle" checked> jiggle on check</label>
+      </div>
+      <p class="hint">Every event the board emits appears here as it fires.</p>
+    </div>
+  </div>
+</div>
+
+<script src="../dist/overboard.js"></script>
+<script>
+const PGNS = {
+  opera: `[Event "Paris Opera"]
+[White "Paul Morphy"]
+[Black "Duke Karl / Count Isouard"]
+[Result "1-0"]
+
+1.e4 e5 2.Nf3 d6 3.d4 Bg4 4.dxe5 Bxf3 5.Qxf3 dxe5 6.Bc4 Nf6 7.Qb3 Qe7
+8.Nc3 c6 9.Bg5 b5 10.Nxb5 cxb5 11.Bxb5+ Nbd7 12.O-O-O Rd8 13.Rxd7 Rxd7
+14.Rd1 Qe6 15.Bxd7+ Nxd7 16.Qb8+ Nxb8 17.Rd8# 1-0`,
+
+  immortal: `[Event "London"]
+[White "Adolf Anderssen"]
+[Black "Lionel Kieseritzky"]
+[Result "1-0"]
+
+1.e4 e5 2.f4 exf4 3.Bc4 Qh4+ 4.Kf1 b5 5.Bxb5 Nf6 6.Nf3 Qh6 7.d3 Nh5
+8.Nh4 Qg5 9.Nf5 c6 10.g4 Nf6 11.Rg1 cxb5 12.h4 Qg6 13.h5 Qg5 14.Qf3 Ng8
+15.Bxf4 Qf6 16.Nc3 Bc5 17.Nd5 Qxb2 18.Bd6 Bxg1 19.e5 Qxa1+ 20.Ke2 Na6
+21.Nxg7+ Kd8 22.Qf6+ Nxf6 23.Be7# 1-0`,
+
+  annotated: `[Event "Annotation demo"]
+
+1. e4 $1 {A solid opening move.} e5 $3 2. Nf3!! Nc6 $6
+3. Bb5 {The Ruy Lopez.} a6?? 4. Bxc6 dxc6 $5 *`,
+
+  promo: `[Event "En passant and underpromotion"]
+
+1. e4 Nf6 2. e5 d5 3. exd6 e6 4. dxc7 Be7 5. cxb8=N *`
+};
+
+const board = new Overboard('#board', { fen: 'start' });
+window.board = board; // handy for poking at from the console
+
+/* ---------------------------------------------------------------- events */
+
+const log = document.getElementById('log');
+const logPosition = document.getElementById('logPosition');
+const jiggle = document.getElementById('jiggle');
+
+function write(name, payload) {
+  if (name === 'position' && !logPosition.checked) return;
+  const line = document.createElement('div');
+  const detail = JSON.stringify(payload, (k, v) => (k === 'fen' ? undefined : v));
+  line.innerHTML = `<b>${name}</b>`;
+  line.append(detail === '{}' ? '' : detail);
+  log.prepend(line);
+  while (log.children.length > 300) log.lastChild.remove();
+}
+
+for (const name of ['move', 'position', 'capture', 'promotion', 'castle',
+                    'check', 'checkmate', 'stalemate', 'annotation', 'pin', 'error']) {
+  board.on(name, (payload) => write(name, payload));
+}
+
+// The three-line "jiggle the board on check" the event system exists for.
+board.on('check', () => {
+  if (!jiggle.checked) return;
+  board.element.animate(
+    [{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }],
+    { duration: 160, iterations: 2 }
+  );
+});
+
+document.getElementById('clearLog').onclick = () => { log.textContent = ''; };
+
+/* ------------------------------------------------------------------- sync */
+
+const fenOut = document.getElementById('fenOut');
+const plyOut = document.getElementById('plyOut');
+const plySlider = document.getElementById('plySlider');
+const moveList = document.getElementById('moveList');
+
+function status(id, message, bad = false) {
+  const el = document.getElementById(id);
+  el.textContent = message;
+  el.classList.toggle('bad', bad);
+}
+
+function renderMoveList() {
+  moveList.textContent = '';
+  board.moves.forEach((move, index) => {
+    if (index % 2 === 0) {
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = `${index / 2 + 1}.`;
+      moveList.append(num);
+    }
+    const button = document.createElement('button');
+    button.textContent = move.san + (move.annotation ? move.annotation.symbol : '');
+    button.title = move.comment || '';
+    button.onclick = () => { board.goTo(index + 1); sync(); };
+    moveList.append(button);
+  });
+}
+
+function sync() {
+  fenOut.textContent = board.fen;
+  plyOut.textContent = `${board.ply} / ${board.moves.length}`;
+  plySlider.max = board.moves.length;
+  plySlider.value = board.ply;
+  [...moveList.querySelectorAll('button')].forEach((button, index) => {
+    button.setAttribute('aria-current', String(index + 1 === board.ply));
+  });
+}
+
+/* --------------------------------------------------------------- playback */
+
+document.getElementById('loadPgn').onclick = () => {
+  try {
+    board.pgn = document.getElementById('pgnIn').value;
+    renderMoveList();
+    sync();
+    status('pgnStatus', `Loaded ${board.moves.length} moves.`);
+  } catch (error) {
+    status('pgnStatus', error.message, true);
+  }
+};
+
+document.getElementById('presetPgn').onchange = (event) => {
+  if (!event.target.value) return;
+  document.getElementById('pgnIn').value = PGNS[event.target.value];
+  document.getElementById('loadPgn').click();
+  event.target.value = '';
+};
+
+for (const [id, method] of [['first', 'first'], ['prev', 'prev'], ['next', 'next'], ['last', 'last']]) {
+  document.getElementById(id).onclick = () => { board[method](); sync(); };
+}
+plySlider.oninput = () => { board.ply = Number(plySlider.value); sync(); };
+
+/* ------------------------------------------------------------------- FEN */
+
+document.getElementById('loadFen').onclick = () => {
+  try {
+    board.fen = document.getElementById('fenIn').value.trim() || 'start';
+    renderMoveList();
+    sync();
+    status('fenStatus', 'Loaded.');
+  } catch (error) {
+    status('fenStatus', error.message, true);
+  }
+};
+document.getElementById('presetFen').onchange = (event) => {
+  if (!event.target.value) return;
+  document.getElementById('fenIn').value = event.target.value;
+  document.getElementById('loadFen').click();
+  event.target.value = '';
+};
+document.getElementById('resetBtn').onclick = () => { board.reset(); renderMoveList(); sync(); };
+document.getElementById('clearBtn').onclick = () => { board.clear(); renderMoveList(); sync(); };
+
+/* ----------------------------------------------------------------- moves */
+
+const files = 'abcdefgh';
+for (const select of [document.getElementById('fromSq'), document.getElementById('toSq')]) {
+  for (let rank = 8; rank >= 1; rank--) {
+    for (const file of files) {
+      select.append(new Option(file + rank, file + rank));
+    }
+  }
+}
+document.getElementById('fromSq').value = 'e2';
+document.getElementById('toSq').value = 'e4';
+
+document.getElementById('coordMove').onclick = () => {
+  const move = board.move(
+    document.getElementById('fromSq').value,
+    document.getElementById('toSq').value,
+    document.getElementById('promo').value
+  );
+  renderMoveList();
+  sync();
+  status('moveStatus', move ? `Played ${move.san}.` : 'Not a legal move — move() returned null.', !move);
+};
+
+document.getElementById('sanMove').onclick = () => {
+  const input = document.getElementById('sanIn');
+  const move = board.move(input.value.trim());
+  renderMoveList();
+  sync();
+  if (move) input.value = '';
+  status('moveStatus', move ? `Played ${move.san}.` : 'Could not resolve that notation — move() returned null.', !move);
+};
+document.getElementById('sanIn').onkeydown = (event) => {
+  if (event.key === 'Enter') document.getElementById('sanMove').click();
+};
+
+/* ------------------------------------------------------------ appearance */
+
+const themeBar = document.getElementById('boardThemes');
+function markThemes(active) {
+  [...themeBar.children].forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.name === active));
+  });
+}
+for (const [name, theme] of Object.entries(Overboard.boardThemes)) {
+  const button = document.createElement('button');
+  button.className = 'swatch';
+  button.dataset.name = name;
+  button.title = `${name} — ${theme.light} / ${theme.dark}`;
+  button.innerHTML = `<i style="background:${theme.light}"></i><i style="background:${theme.dark}"></i>`;
+  button.onclick = () => {
+    board.boardTheme = name;
+    document.getElementById('lightPick').value = theme.light;
+    document.getElementById('darkPick').value = theme.dark;
+    markThemes(name);
+  };
+  themeBar.append(button);
+}
+markThemes('brown');
+
+function applyCustom() {
+  board.boardTheme = {
+    light: document.getElementById('lightPick').value,
+    dark: document.getElementById('darkPick').value,
+  };
+  markThemes(null);
+}
+document.getElementById('lightPick').oninput = applyCustom;
+document.getElementById('darkPick').oninput = applyCustom;
+
+const pieceSelect = document.getElementById('pieceTheme');
+for (const name of Object.keys(Overboard.pieceThemes)) pieceSelect.append(new Option(name, name));
+pieceSelect.onchange = () => { board.pieceTheme = pieceSelect.value; };
+
+document.getElementById('flipBtn').onclick = () => board.flip();
+document.getElementById('coordsToggle').onchange = (e) => { board.showCoordinates = e.target.checked; };
+document.getElementById('hlToggle').onchange = (e) => { board.highlightLastMove = e.target.checked; };
+document.getElementById('animRange').oninput = (e) => {
+  board.animation = Number(e.target.value);
+  document.getElementById('animOut').textContent = `${e.target.value}ms`;
+};
+
+/* ------------------------------------------------------------------ boot */
+
+document.getElementById('pgnIn').value = PGNS.opera;
+sync();
+</script>
+</body>
+</html>
