@@ -496,7 +496,7 @@ test('the bundled cburnett theme has all twelve pieces, each scalable and drawn'
   for (const code of PIECE_CODES) {
     const markup = pieceThemes.cburnett[code];
     assert.ok(markup, `${code} is present`);
-    assert.match(markup, /viewBox="0 0 45 45"/, `${code} has a viewBox to scale by`);
+    assert.match(markup, /viewBox="0 1\.5 45 45"/, `${code} has a viewBox to scale by`);
     assert.match(markup, /<path/, `${code} actually draws something`);
   }
 });

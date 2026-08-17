@@ -20,10 +20,21 @@
  *   3. `id="…"` attributes stripped — the originals are one-file-per-piece,
  *      so IDs never collided; thirty-two pieces sharing one document would.
  *   4. Whitespace collapsed to single spaces (cosmetic only).
- *   5. A `viewBox="0 0 45 45"` is added (via the `svg()` wrapper below) in
- *      place of the originals' `width`/`height` attributes, so the piece
- *      scales to fill `.ob-piece`'s `width: 100%; height: 100%` instead of
- *      rendering at a fixed 45px.
+ *   5. A `viewBox` is added (via the `svg()` wrapper below) in place of the
+ *      originals' `width`/`height` attributes, so the piece scales to fill
+ *      `.ob-piece`'s `width: 100%; height: 100%` instead of rendering at a
+ *      fixed 45px.
+ *
+ * That viewBox is `0 1.5 45 45`, not `0 0 45 45`. In the original artwork
+ * every piece's base sits at very nearly the same y (39–40.5 of 45), but the
+ * empty space above varies by piece height (6 for the king/queen's crown, 9
+ * for the shorter rook/pawn) while the space below stays roughly fixed — so
+ * filling the full 45 units edge-to-edge leaves noticeably more headroom
+ * above a piece than below it, worst for the rook and pawn. Nudging the
+ * window up by 1.5 units keeps every piece's relative position (they all
+ * move by the same amount, so the shared baseline is preserved) while
+ * roughly halving that imbalance across the set. It doesn't crop anything:
+ * the shortest top margin in the set is 6, well clear of a 1.5 shift.
  *
  * Register your own set with `Overboard.registerPieceTheme(name, map)` — a
  * map is just twelve strings of SVG markup keyed `wK`, `bQ`, and so on.
@@ -31,7 +42,7 @@
  * @typedef {Record<string, string>} PieceSet
  */
 
-const VIEW_BOX = '0 0 45 45';
+const VIEW_BOX = '0 1.5 45 45';
 
 /** @param {string} body */
 const svg = (body) =>
