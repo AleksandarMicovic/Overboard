@@ -36,18 +36,18 @@ export const EMPTY_FEN = '8/8/8/8/8/8/8/8 w - - 0 1';
 
 const FILES = 'abcdefgh';
 
-/** FEN letter -> piece code. */
+/** FEN letter -> piece code. @type {Record<string, Piece>} */
 const PIECE_OF = {
   K: 'wK', Q: 'wQ', R: 'wR', B: 'wB', N: 'wN', P: 'wP',
   k: 'bK', q: 'bQ', r: 'bR', b: 'bB', n: 'bN', p: 'bP',
 };
 
-/** Piece code -> FEN letter. */
+/** Piece code -> FEN letter. @type {Record<string, string>} */
 const LETTER_OF = Object.fromEntries(
   Object.entries(PIECE_OF).map(([letter, piece]) => [piece, letter]),
 );
 
-/** Rook home squares, and the castling right each one carries. */
+/** Rook home squares, and the castling right each one carries. @type {Record<number, string>} */
 const ROOK_HOME = { 0: 'Q', 7: 'K', 56: 'q', 63: 'k' };
 
 /**
@@ -145,7 +145,7 @@ export function parseFen(fen) {
   };
 }
 
-/** Keep castling rights in the canonical KQkq order so FEN round-trips. */
+/** Keep castling rights in the canonical KQkq order so FEN round-trips. @param {string} rights */
 function normalizeCastling(rights) {
   return [...'KQkq'].filter((r) => rights.includes(r)).join('');
 }

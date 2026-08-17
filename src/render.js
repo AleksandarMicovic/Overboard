@@ -65,7 +65,7 @@ const CSS = `
 .ob-coord-rank { top: 0; }
 `;
 
-/** Inject the stylesheet once per document. */
+/** Inject the stylesheet once per document. @param {Document} doc */
 function ensureStyle(doc) {
   if (doc.getElementById(STYLE_ID)) return;
   const style = doc.createElement('style');
@@ -130,6 +130,7 @@ export class Renderer {
   /** @type {HTMLElement|null} */
   #coords = null;
 
+  /** @type {'white'|'black'} */
   #orientation = 'white';
 
   /**
@@ -196,14 +197,16 @@ export class Renderer {
     /** @type {Map<string, string>} square -> piece code */
     const wanted = new Map();
     for (let index = 0; index < 64; index++) {
-      if (board[index]) wanted.set(indexToSquare(index), board[index]);
+      const piece = board[index];
+      if (piece) wanted.set(indexToSquare(index), piece);
     }
 
     // A piece that moved is the same node relocated, so find one-to-one moves
     // before adding or removing anything. Without this, every move would be a
     // remove-plus-add and nothing would animate.
-    if (lastMove && this.#pieces.has(lastMove.from) && wanted.has(lastMove.to)) {
-      const node = this.#pieces.get(lastMove.from);
+    const movedNode = lastMove ? this.#pieces.get(lastMove.from) : undefined;
+    if (lastMove && movedNode && wanted.has(lastMove.to)) {
+      const node = movedNode;
       if (node.dataset.piece === wanted.get(lastMove.to)) {
         this.#pieces.delete(lastMove.from);
         this.#pieces.get(lastMove.to)?.remove();
@@ -243,14 +246,14 @@ export class Renderer {
    */
   repaintPieces(pieceSet) {
     for (const node of this.#pieces.values()) {
-      node.innerHTML = pieceSet[node.dataset.piece] ?? '';
+      node.innerHTML = pieceSet[node.dataset.piece ?? ''] ?? '';
     }
   }
 
   /** @param {string[]} squares */
   setHighlights(squares) {
     while (this.#highlights.length > squares.length) {
-      this.#highlights.pop().remove();
+      this.#highlights.pop()?.remove();
     }
     while (this.#highlights.length < squares.length) {
       const node = this.element.ownerDocument.createElement('div');

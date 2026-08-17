@@ -230,8 +230,9 @@ Nothing is fetched, so it works offline and on mobile.
 ## Development
 
 ```
-npm test        # 122 tests, no dependencies
-npm run build   # regenerate dist/overboard.js
+npm test          # typecheck, then 123 tests. One dev-only dependency: typescript
+npm run typecheck # tsc --noEmit against src/ and index.d.ts, on its own
+npm run build     # regenerate dist/overboard.js
 open demo/index.html
 ```
 
@@ -241,7 +242,8 @@ log — it's the fastest way to see what the library does.
 The source is plain ES modules under `src/`, which browsers run directly; the build
 step exists only to produce the single-file distributable. Types are JSDoc plus a
 hand-written `index.d.ts`, so there's no compile step between the code you read and
-the code that runs.
+the code that runs — `tsc --noEmit` verifies both against the implementation on
+every `npm test`, but never emits anything.
 
 Move generation is verified with [perft](https://www.chessprogramming.org/Perft)
 against the six standard test positions — a wrong castling right or a missed en

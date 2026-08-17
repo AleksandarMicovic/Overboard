@@ -46,18 +46,18 @@ const EMPTY_FEN = '8/8/8/8/8/8/8/8 w - - 0 1';
 
 const FILES = 'abcdefgh';
 
-/** FEN letter -> piece code. */
+/** FEN letter -> piece code. @type {Record<string, Piece>} */
 const PIECE_OF = {
   K: 'wK', Q: 'wQ', R: 'wR', B: 'wB', N: 'wN', P: 'wP',
   k: 'bK', q: 'bQ', r: 'bR', b: 'bB', n: 'bN', p: 'bP',
 };
 
-/** Piece code -> FEN letter. */
+/** Piece code -> FEN letter. @type {Record<string, string>} */
 const LETTER_OF = Object.fromEntries(
   Object.entries(PIECE_OF).map(([letter, piece]) => [piece, letter]),
 );
 
-/** Rook home squares, and the castling right each one carries. */
+/** Rook home squares, and the castling right each one carries. @type {Record<number, string>} */
 const ROOK_HOME = { 0: 'Q', 7: 'K', 56: 'q', 63: 'k' };
 
 /**
@@ -155,7 +155,7 @@ function parseFen(fen) {
   };
 }
 
-/** Keep castling rights in the canonical KQkq order so FEN round-trips. */
+/** Keep castling rights in the canonical KQkq order so FEN round-trips. @param {string} rights */
 function normalizeCastling(rights) {
   return [...'KQkq'].filter((r) => rights.includes(r)).join('');
 }
@@ -289,15 +289,20 @@ function applyMove(position, move) {
 /** @typedef {import('./position.js').Move} Move */
 /** @typedef {import('./position.js').Piece} Piece */
 
+/** @type {number[][]} */
 const KNIGHT_DELTAS = [
   [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2],
 ];
+/** @type {number[][]} */
 const DIAGONALS = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+/** @type {number[][]} */
 const ORTHOGONALS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const KING_DELTAS = [...DIAGONALS, ...ORTHOGONALS];
 
+/** @type {Record<string, number[][]>} */
 const SLIDING_DIRS = { R: ORTHOGONALS, B: DIAGONALS, Q: KING_DELTAS };
 
+/** @type {('q'|'r'|'b'|'n')[]} */
 const PROMOTION_PIECES = ['q', 'r', 'b', 'n'];
 
 /** @param {number} file @param {number} rank */
@@ -342,7 +347,9 @@ function isSquareAttacked(position, square, byColor) {
     if (onBoard(f, pawnRank) && board[pawnRank * 8 + f] === `${byColor}P`) return true;
   }
 
-  for (const [dirs, piece] of [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']]) {
+  /** @type {[number[][], string][]} */
+  const attackerDirs = [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']];
+  for (const [dirs, piece] of attackerDirs) {
     for (const [df, dr] of dirs) {
       let f = file + df;
       let r = rank + dr;
@@ -482,6 +489,7 @@ function addCastlingMoves(position, moves, from, piece, color) {
   // Castling out of check is illegal, and this is the cheapest place to check.
   if (isSquareAttacked(position, home, enemy)) return;
 
+  /** @type {{side: 'k'|'q', right: string, rook: number}[]} */
   const options = color === 'w'
     ? [{ side: 'k', right: 'K', rook: 7 }, { side: 'q', right: 'Q', rook: 0 }]
     : [{ side: 'k', right: 'k', rook: 63 }, { side: 'q', right: 'q', rook: 56 }];
@@ -557,7 +565,9 @@ function findPins(position, color = position.turn) {
   const kingFile = king & 7;
   const kingRank = king >> 3;
 
-  for (const [dirs, sliderType] of [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']]) {
+  /** @type {[number[][], string][]} */
+  const pinnerDirs = [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']];
+  for (const [dirs, sliderType] of pinnerDirs) {
     for (const [df, dr] of dirs) {
       let f = kingFile + df;
       let r = kingRank + dr;
@@ -760,11 +770,15 @@ function moveFromCoordinates(position, from, to, promotion) {
 
 
 /** @typedef {import('./position.js').Position} Position */
+/** @typedef {import('./position.js').Piece} Piece */
 
 /**
  * Numeric Annotation Glyphs worth surfacing. The rest are passed through as a
  * raw `nag` number without a label.
  */
+/** @typedef {{symbol: string, label: 'good'|'mistake'|'brilliant'|'blunder'|'interesting'|'dubious'}} Annotation */
+
+/** @type {Record<number, Annotation>} */
 const NAG_LABELS = {
   1: { symbol: '!', label: 'good' },
   2: { symbol: '?', label: 'mistake' },
@@ -774,7 +788,7 @@ const NAG_LABELS = {
   6: { symbol: '?!', label: 'dubious' },
 };
 
-/** Suffixes written straight into SAN map to the same labels. */
+/** Suffixes written straight into SAN map to the same labels. @type {Record<string, number>} */
 const SUFFIX_NAGS = { '!': 1, '?': 2, '!!': 3, '??': 4, '!?': 5, '?!': 6 };
 
 const RESULTS = new Set(['1-0', '0-1', '1/2-1/2', '*']);
@@ -784,15 +798,15 @@ const RESULTS = new Set(['1-0', '0-1', '1/2-1/2', '*']);
  * @property {string} san            As written, minus annotation suffixes.
  * @property {string} from           Origin square, e.g. 'g1'.
  * @property {string} to             Destination square.
- * @property {string} piece          Piece code, e.g. 'wN'.
- * @property {string|null} captured
- * @property {string|null} promotion
+ * @property {Piece} piece           Piece code, e.g. 'wN'.
+ * @property {Piece|null} captured
+ * @property {'q'|'r'|'b'|'n'|null} promotion
  * @property {'k'|'q'|null} castle
  * @property {string} fen            Position *after* the move.
  * @property {number} ply            1-based.
  * @property {string} [comment]
  * @property {number} [nag]
- * @property {{symbol: string, label: string}} [annotation]
+ * @property {Annotation} [annotation]
  *
  * @typedef {object} PgnGame
  * @property {Record<string, string>} headers
@@ -833,6 +847,7 @@ function splitSections(pgn) {
  * @returns {{type: 'san'|'comment'|'nag'|'result', value: string|number}[]}
  */
 function tokenize(movetext) {
+  /** @type {{type: 'san'|'comment'|'nag'|'result', value: string|number}[]} */
   const tokens = [];
   let index = 0;
   let ravDepth = 0;
@@ -924,7 +939,8 @@ function parsePgn(pgn) {
   try {
     position = parseFen(startFen);
   } catch (error) {
-    game.errors.push(`Bad FEN header: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    game.errors.push(`Bad FEN header: ${message}`);
     position = parseFen(STARTING_FEN);
     game.startFen = STARTING_FEN;
   }
@@ -1088,8 +1104,10 @@ function registerBoardTheme(name, theme) {
  * Register your own set with `Overboard.registerPieceTheme(name, map)` — a
  * map is just twelve strings of SVG markup keyed `wK`, `bQ`, and so on.
  *
- * @typedef {Record<string, string>} PieceSet
+ * @typedef {Record<Piece, string>} PieceSet
  */
+
+/** @typedef {import('./position.js').Piece} Piece */
 
 const VIEW_BOX = '0 1.5 45 45';
 
@@ -1097,7 +1115,7 @@ const VIEW_BOX = '0 1.5 45 45';
 const svg = (body) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEW_BOX}" aria-hidden="true">${body}</svg>`;
 
-/** @type {Record<string, string>} */
+/** @type {PieceSet} */
 const CBURNETT = {
   wK: svg('<g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"> <path stroke-linejoin="miter" d="M22.5 11.63V6M20 8h5"/> <path fill="#fff" stroke-linecap="butt" stroke-linejoin="miter" d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/> <path fill="#fff" d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/> <path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/> </g>'),
   wQ: svg('<g style="fill:#ffffff;stroke:#000000;stroke-width:1.5;stroke-linejoin:round"> <path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/> <path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/> <path d="M 11.5,30 C 15,29 30,29 33.5,30" style="fill:none"/> <path d="M 12,33.5 C 18,32.5 27,32.5 33,33.5" style="fill:none"/> <circle cx="6" cy="12" r="2" /> <circle cx="14" cy="9" r="2" /> <circle cx="22.5" cy="8" r="2" /> <circle cx="31" cy="9" r="2" /> <circle cx="39" cy="12" r="2" /> </g>'),
@@ -1120,6 +1138,7 @@ const pieceThemes = {
 
 const DEFAULT_PIECE_THEME = 'cburnett';
 
+/** @type {Piece[]} */
 const PIECE_CODES = [
   'wK', 'wQ', 'wR', 'wB', 'wN', 'wP',
   'bK', 'bQ', 'bR', 'bB', 'bN', 'bP',
@@ -1219,7 +1238,7 @@ const CSS = `
 .ob-coord-rank { top: 0; }
 `;
 
-/** Inject the stylesheet once per document. */
+/** Inject the stylesheet once per document. @param {Document} doc */
 function ensureStyle(doc) {
   if (doc.getElementById(STYLE_ID)) return;
   const style = doc.createElement('style');
@@ -1284,6 +1303,7 @@ class Renderer {
   /** @type {HTMLElement|null} */
   #coords = null;
 
+  /** @type {'white'|'black'} */
   #orientation = 'white';
 
   /**
@@ -1350,14 +1370,16 @@ class Renderer {
     /** @type {Map<string, string>} square -> piece code */
     const wanted = new Map();
     for (let index = 0; index < 64; index++) {
-      if (board[index]) wanted.set(indexToSquare(index), board[index]);
+      const piece = board[index];
+      if (piece) wanted.set(indexToSquare(index), piece);
     }
 
     // A piece that moved is the same node relocated, so find one-to-one moves
     // before adding or removing anything. Without this, every move would be a
     // remove-plus-add and nothing would animate.
-    if (lastMove && this.#pieces.has(lastMove.from) && wanted.has(lastMove.to)) {
-      const node = this.#pieces.get(lastMove.from);
+    const movedNode = lastMove ? this.#pieces.get(lastMove.from) : undefined;
+    if (lastMove && movedNode && wanted.has(lastMove.to)) {
+      const node = movedNode;
       if (node.dataset.piece === wanted.get(lastMove.to)) {
         this.#pieces.delete(lastMove.from);
         this.#pieces.get(lastMove.to)?.remove();
@@ -1397,14 +1419,14 @@ class Renderer {
    */
   repaintPieces(pieceSet) {
     for (const node of this.#pieces.values()) {
-      node.innerHTML = pieceSet[node.dataset.piece] ?? '';
+      node.innerHTML = pieceSet[node.dataset.piece ?? ''] ?? '';
     }
   }
 
   /** @param {string[]} squares */
   setHighlights(squares) {
     while (this.#highlights.length > squares.length) {
-      this.#highlights.pop().remove();
+      this.#highlights.pop()?.remove();
     }
     while (this.#highlights.length < squares.length) {
       const node = this.element.ownerDocument.createElement('div');
@@ -1487,6 +1509,8 @@ class Renderer {
 
 /** @typedef {import('./pgn.js').PgnMove} PgnMove */
 /** @typedef {import('./position.js').Position} Position */
+/** @typedef {import('./pieces.js').PieceSet} PieceSet */
+/** @typedef {import('./themes.js').BoardTheme} BoardTheme */
 
 /**
  * @typedef {object} OverboardOptions
@@ -1494,12 +1518,25 @@ class Renderer {
  * @property {string} [pgn] A PGN game. Overrides `fen` when both are given.
  * @property {'white'|'black'} [orientation] Default 'white'.
  * @property {boolean} [showCoordinates] Default false.
- * @property {string} [pieceTheme] Default 'cburnett'.
- * @property {string|{light: string, dark: string}} [boardTheme] Default 'brown'.
+ * @property {string|PieceSet} [pieceTheme] Default 'cburnett'.
+ * @property {string|BoardTheme} [boardTheme] Default 'brown'.
  * @property {number} [animation] Milliseconds. Default 200. 0 disables.
  * @property {boolean} [highlightLastMove] Default true.
  */
 
+/**
+ * @typedef {object} ResolvedOptions Every option, defaulted.
+ * @property {string} fen
+ * @property {string|null} pgn
+ * @property {'white'|'black'} orientation
+ * @property {boolean} showCoordinates
+ * @property {string|PieceSet} pieceTheme
+ * @property {string|BoardTheme} boardTheme
+ * @property {number} animation
+ * @property {boolean} highlightLastMove
+ */
+
+/** @type {ResolvedOptions} */
 const DEFAULTS = {
   fen: 'start',
   pgn: null,
@@ -1548,9 +1585,10 @@ class Overboard {
   /** @type {Map<string, Set<Function>>} */
   #listeners = new Map();
 
+  /** @type {ResolvedOptions} */
   #options = { ...DEFAULTS };
 
-  /** @type {Record<string, string>} */
+  /** @type {PieceSet} */
   #pieceSet;
 
   /**
@@ -1558,8 +1596,9 @@ class Overboard {
    * @param {OverboardOptions} [options]
    */
   constructor(target, options = {}) {
-    const container =
-      typeof target === 'string' ? document.querySelector(target) : target;
+    const container = /** @type {HTMLElement|null} */ (
+      typeof target === 'string' ? document.querySelector(target) : target
+    );
     if (!container) throw new Error(`Overboard: no element matching ${target}`);
 
     this.#options = { ...DEFAULTS, ...options };
@@ -1699,7 +1738,7 @@ class Overboard {
     return this.#options.boardTheme;
   }
 
-  /** @param {string|{light: string, dark: string}} value */
+  /** @param {string|BoardTheme} value */
   set boardTheme(value) {
     this.#options.boardTheme = value;
     this.#renderer.setBoardTheme(resolveBoardTheme(value));
@@ -1709,7 +1748,7 @@ class Overboard {
     return this.#options.pieceTheme;
   }
 
-  /** @param {string|Record<string, string>} value */
+  /** @param {string|PieceSet} value */
   set pieceTheme(value) {
     this.#options.pieceTheme = value;
     this.#pieceSet = resolvePieceTheme(value);
@@ -1870,8 +1909,9 @@ class Overboard {
    */
   on(name, listener) {
     if (typeof listener !== 'function') throw new TypeError('Listener must be a function');
-    if (!this.#listeners.has(name)) this.#listeners.set(name, new Set());
-    this.#listeners.get(name).add(listener);
+    const listeners = this.#listeners.get(name) ?? new Set();
+    this.#listeners.set(name, listeners);
+    listeners.add(listener);
     return () => this.off(name, listener);
   }
 

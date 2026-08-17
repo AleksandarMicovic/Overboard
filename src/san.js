@@ -24,15 +24,20 @@ import {
 /** @typedef {import('./position.js').Move} Move */
 /** @typedef {import('./position.js').Piece} Piece */
 
+/** @type {number[][]} */
 const KNIGHT_DELTAS = [
   [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2],
 ];
+/** @type {number[][]} */
 const DIAGONALS = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+/** @type {number[][]} */
 const ORTHOGONALS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const KING_DELTAS = [...DIAGONALS, ...ORTHOGONALS];
 
+/** @type {Record<string, number[][]>} */
 const SLIDING_DIRS = { R: ORTHOGONALS, B: DIAGONALS, Q: KING_DELTAS };
 
+/** @type {('q'|'r'|'b'|'n')[]} */
 const PROMOTION_PIECES = ['q', 'r', 'b', 'n'];
 
 /** @param {number} file @param {number} rank */
@@ -77,7 +82,9 @@ export function isSquareAttacked(position, square, byColor) {
     if (onBoard(f, pawnRank) && board[pawnRank * 8 + f] === `${byColor}P`) return true;
   }
 
-  for (const [dirs, piece] of [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']]) {
+  /** @type {[number[][], string][]} */
+  const attackerDirs = [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']];
+  for (const [dirs, piece] of attackerDirs) {
     for (const [df, dr] of dirs) {
       let f = file + df;
       let r = rank + dr;
@@ -217,6 +224,7 @@ function addCastlingMoves(position, moves, from, piece, color) {
   // Castling out of check is illegal, and this is the cheapest place to check.
   if (isSquareAttacked(position, home, enemy)) return;
 
+  /** @type {{side: 'k'|'q', right: string, rook: number}[]} */
   const options = color === 'w'
     ? [{ side: 'k', right: 'K', rook: 7 }, { side: 'q', right: 'Q', rook: 0 }]
     : [{ side: 'k', right: 'k', rook: 63 }, { side: 'q', right: 'q', rook: 56 }];
@@ -292,7 +300,9 @@ export function findPins(position, color = position.turn) {
   const kingFile = king & 7;
   const kingRank = king >> 3;
 
-  for (const [dirs, sliderType] of [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']]) {
+  /** @type {[number[][], string][]} */
+  const pinnerDirs = [[ORTHOGONALS, 'R'], [DIAGONALS, 'B']];
+  for (const [dirs, sliderType] of pinnerDirs) {
     for (const [df, dr] of dirs) {
       let f = kingFile + df;
       let r = kingRank + dr;

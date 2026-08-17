@@ -14,13 +14,29 @@
     },
     "./dist/overboard.js": "./dist/overboard.js"
   },
-  "files": ["src", "dist", "index.d.ts"],
+  "files": [
+    "src",
+    "dist",
+    "index.d.ts"
+  ],
   "scripts": {
     "build": "node build.js",
-    "test": "node --test \"test/*.test.js\"",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && node --test \"test/*.test.js\"",
     "test:perft": "node --test test/perft.test.js"
   },
-  "keywords": ["chess", "chessboard", "fen", "pgn", "svg", "viewer", "anki"],
+  "keywords": [
+    "chess",
+    "chessboard",
+    "fen",
+    "pgn",
+    "svg",
+    "viewer",
+    "anki"
+  ],
   "license": "MIT",
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
 }

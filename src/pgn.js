@@ -20,11 +20,15 @@ import {
 import { moveFromSan, stripSan } from './san.js';
 
 /** @typedef {import('./position.js').Position} Position */
+/** @typedef {import('./position.js').Piece} Piece */
 
 /**
  * Numeric Annotation Glyphs worth surfacing. The rest are passed through as a
  * raw `nag` number without a label.
  */
+/** @typedef {{symbol: string, label: 'good'|'mistake'|'brilliant'|'blunder'|'interesting'|'dubious'}} Annotation */
+
+/** @type {Record<number, Annotation>} */
 export const NAG_LABELS = {
   1: { symbol: '!', label: 'good' },
   2: { symbol: '?', label: 'mistake' },
@@ -34,7 +38,7 @@ export const NAG_LABELS = {
   6: { symbol: '?!', label: 'dubious' },
 };
 
-/** Suffixes written straight into SAN map to the same labels. */
+/** Suffixes written straight into SAN map to the same labels. @type {Record<string, number>} */
 const SUFFIX_NAGS = { '!': 1, '?': 2, '!!': 3, '??': 4, '!?': 5, '?!': 6 };
 
 const RESULTS = new Set(['1-0', '0-1', '1/2-1/2', '*']);
@@ -44,15 +48,15 @@ const RESULTS = new Set(['1-0', '0-1', '1/2-1/2', '*']);
  * @property {string} san            As written, minus annotation suffixes.
  * @property {string} from           Origin square, e.g. 'g1'.
  * @property {string} to             Destination square.
- * @property {string} piece          Piece code, e.g. 'wN'.
- * @property {string|null} captured
- * @property {string|null} promotion
+ * @property {Piece} piece           Piece code, e.g. 'wN'.
+ * @property {Piece|null} captured
+ * @property {'q'|'r'|'b'|'n'|null} promotion
  * @property {'k'|'q'|null} castle
  * @property {string} fen            Position *after* the move.
  * @property {number} ply            1-based.
  * @property {string} [comment]
  * @property {number} [nag]
- * @property {{symbol: string, label: string}} [annotation]
+ * @property {Annotation} [annotation]
  *
  * @typedef {object} PgnGame
  * @property {Record<string, string>} headers
@@ -93,6 +97,7 @@ function splitSections(pgn) {
  * @returns {{type: 'san'|'comment'|'nag'|'result', value: string|number}[]}
  */
 function tokenize(movetext) {
+  /** @type {{type: 'san'|'comment'|'nag'|'result', value: string|number}[]} */
   const tokens = [];
   let index = 0;
   let ravDepth = 0;
@@ -184,7 +189,8 @@ export function parsePgn(pgn) {
   try {
     position = parseFen(startFen);
   } catch (error) {
-    game.errors.push(`Bad FEN header: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    game.errors.push(`Bad FEN header: ${message}`);
     position = parseFen(STARTING_FEN);
     game.startFen = STARTING_FEN;
   }
