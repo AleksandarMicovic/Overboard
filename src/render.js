@@ -33,6 +33,7 @@ const CSS = `
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
+  container-type: inline-size;
 }
 .overboard * { box-sizing: border-box; }
 .ob-piece,
@@ -54,9 +55,7 @@ const CSS = `
   z-index: 3;
   pointer-events: none;
   font: 700 3cqw/1 system-ui, -apple-system, "Segoe UI", sans-serif;
-  container-type: inline-size;
 }
-.overboard { container-type: inline-size; }
 .ob-coord {
   position: absolute;
   opacity: 0.75;
@@ -98,8 +97,21 @@ export function squareToXY(square, orientation = 'white') {
     : { x: file, y: 7 - rank };
 }
 
-/** @param {{x: number, y: number}} point */
-const translate = ({ x, y }) => `translate(${x * 100}%, ${y * 100}%)`;
+/**
+ * `%` inside `transform: translate()` resolves against the element's own box
+ * (per spec), not the parent's — so it's relative to `.ob-piece`'s already
+ * independently-rounded 12.5%-of-parent width. That's a second, compounding
+ * rounding step on top of the one the checkerboard background goes through,
+ * and at least WebKit rounds the piece's own box to a device pixel before
+ * computing the percentage, drifting the two apart by a visible amount at
+ * the board's outer edges (Blink evidently keeps enough subpixel precision
+ * that it doesn't). `cqw` resolves as a length against `.overboard` itself
+ * (an inline-size query container), the same reference frame the
+ * background's `background-size: 25% 25%` grid uses, so both agree on
+ * exactly where a square boundary falls regardless of engine.
+ * @param {{x: number, y: number}} point
+ */
+const translate = ({ x, y }) => `translate(${x * 12.5}cqw, ${y * 12.5}cqw)`;
 
 /**
  * Owns the DOM for one board. Deliberately dumb: it is told what to show and
