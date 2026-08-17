@@ -1,15 +1,33 @@
 /**
  * Piece themes.
  *
- * Both sets are original work for this project, which keeps Overboard free of
- * third-party asset licensing. Register your own with
- * `Overboard.registerPieceTheme(name, map)` — a map is just twelve strings of
- * SVG markup keyed `wK`, `bQ`, and so on.
+ * The bundled set is Cburnett, the SVG pieces drawn by Colin M.L. Burnett and
+ * published on Wikimedia Commons — the same artwork used by Wikipedia and
+ * Lichess. It is licensed CC BY-SA 3.0, not MIT; see the README's Attribution
+ * section and the LICENSE file for the full notice and required credit.
  *
- * Shapes are written once and colored per side rather than authored twice, so
- * each theme is six definitions instead of twelve files.
+ * Source: Wikimedia Commons, path Special:FilePath/Chess_{k,q,r,b,n,p}{l,d}t45.svg
+ * on commons.wikimedia.org (`l`/`d` = light/dark piece, i.e. white/black).
+ * Fetched 2026-08-17. See the README's Attribution section for a live link.
  *
- * @typedef {{fill: string, stroke: string, accent: string}} Palette
+ * The markup below is the original path data and `style` attributes,
+ * unmodified, with only these changes applied so it drops into this file and
+ * this renderer:
+ *   1. XML prolog and DOCTYPE stripped (not valid inside a JS string / not
+ *      needed once embedded).
+ *   2. Only the content inside the outer `<svg>` is kept; the wrapper below
+ *      supplies its own `<svg>` tag.
+ *   3. `id="…"` attributes stripped — the originals are one-file-per-piece,
+ *      so IDs never collided; thirty-two pieces sharing one document would.
+ *   4. Whitespace collapsed to single spaces (cosmetic only).
+ *   5. A `viewBox="0 0 45 45"` is added (via the `svg()` wrapper below) in
+ *      place of the originals' `width`/`height` attributes, so the piece
+ *      scales to fill `.ob-piece`'s `width: 100%; height: 100%` instead of
+ *      rendering at a fixed 45px.
+ *
+ * Register your own set with `Overboard.registerPieceTheme(name, map)` — a
+ * map is just twelve strings of SVG markup keyed `wK`, `bQ`, and so on.
+ *
  * @typedef {Record<string, string>} PieceSet
  */
 
@@ -19,146 +37,28 @@ const VIEW_BOX = '0 0 45 45';
 const svg = (body) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEW_BOX}" aria-hidden="true">${body}</svg>`;
 
-/* -------------------------------------------------------------------------
- * Classic — Staunton-derived silhouettes with an outline.
- * ---------------------------------------------------------------------- */
-
-/** Shared footing: every classic piece stands on the same collar and base. */
-const foot = `
-  <rect x="14.4" y="29.8" width="16.2" height="3.6" rx="1.8"/>
-  <rect x="11.2" y="34" width="22.6" height="5" rx="2.5"/>`;
-
-/** @type {Record<string, (c: Palette) => string>} */
-const CLASSIC = {
-  P: () => `
-    <circle cx="22.5" cy="12.8" r="4.9"/>
-    <path d="M16.8 30.6c0-5.6 2.9-8.2 3.9-13.4h3.6c1 5.2 3.9 7.8 3.9 13.4z"/>
-    ${foot}`,
-
-  R: () => `
-    <path d="M11.25 9h4.2v3.4h1.9V9h4.2v3.4h1.9V9h4.2v3.4h1.9V9h4.2v9.8H11.25z"/>
-    <path d="M14.2 18.8h16.6l-1.5 11.6H15.7z"/>
-    ${foot}`,
-
-  N: (c) => `
-    <path d="M25.4 7.4c2 1.4 3.2 3.2 4 5.4 2.4 4.2 3.6 9.2 3.8 18.2H15.4c0-3.2 1.2-5.8 3.2-7.6-1.6 1-3.6 2.2-5.2 2.4-2 .2-2.8-1.8-1.8-3.6 1.2-2.2 3-4 5.2-5.6 2.6-2 4.4-4 5.4-6.6l1.4 2.4z"/>
-    <circle cx="19.5" cy="18.3" r="1.2" fill="${c.accent}" stroke="none"/>
-    <path d="M27.6 13.4c1.8 3.6 2.6 8.4 2.8 15.2" fill="none" stroke="${c.accent}" stroke-width="1.1" opacity=".55"/>
-    ${foot}`,
-
-  B: (c) => `
-    <circle cx="22.5" cy="8.2" r="2.4"/>
-    <path d="M22.5 11c5.1 4.6 7.5 9.4 7.5 13.4 0 4-3.4 6.4-7.5 6.4S15 28.4 15 24.4c0-4 2.4-8.8 7.5-13.4z"/>
-    <path d="M22.5 15.4l4 5.2M16.6 26.2h11.8" fill="none" stroke="${c.accent}" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>
-    ${foot}`,
-
-  Q: () => `
-    <circle cx="11" cy="12.4" r="2.2"/>
-    <circle cx="17" cy="9.4" r="2.2"/>
-    <circle cx="22.5" cy="8.4" r="2.4"/>
-    <circle cx="28" cy="9.4" r="2.2"/>
-    <circle cx="34" cy="12.4" r="2.2"/>
-    <path d="M11 13.8l4.6 16h13.8l4.6-16-5.6 7-6-9.8-6 9.8z"/>
-    ${foot}`,
-
-  K: (c) => `
-    <path d="M21.1 4.6h2.8V8h3.4v2.8h-3.4v3.8h-2.8v-3.8h-3.4V8h3.4z"/>
-    <path d="M22.5 16c3.5-3.2 9.4-2 10.2 3 .8 4.8-2.7 8.8-10.2 13.2C15 27.8 11.5 23.8 12.3 19c.8-5 6.7-6.2 10.2-3z"/>
-    <path d="M22.5 17.6v13M17 22.6h11" fill="none" stroke="${c.accent}" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
-    ${foot}`,
+/** @type {Record<string, string>} */
+const CBURNETT = {
+  wK: svg('<g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"> <path stroke-linejoin="miter" d="M22.5 11.63V6M20 8h5"/> <path fill="#fff" stroke-linecap="butt" stroke-linejoin="miter" d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/> <path fill="#fff" d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/> <path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/> </g>'),
+  wQ: svg('<g style="fill:#ffffff;stroke:#000000;stroke-width:1.5;stroke-linejoin:round"> <path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/> <path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/> <path d="M 11.5,30 C 15,29 30,29 33.5,30" style="fill:none"/> <path d="M 12,33.5 C 18,32.5 27,32.5 33,33.5" style="fill:none"/> <circle cx="6" cy="12" r="2" /> <circle cx="14" cy="9" r="2" /> <circle cx="22.5" cy="8" r="2" /> <circle cx="31" cy="9" r="2" /> <circle cx="39" cy="12" r="2" /> </g>'),
+  wR: svg('<g style="opacity:1; fill:#ffffff; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"> <path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z " style="stroke-linecap:butt;" /> <path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z " style="stroke-linecap:butt;" /> <path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14" style="stroke-linecap:butt;" /> <path d="M 34,14 L 31,17 L 14,17 L 11,14" /> <path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17" style="stroke-linecap:butt; stroke-linejoin:miter;" /> <path d="M 31,29.5 L 32.5,32 L 12.5,32 L 14,29.5" /> <path d="M 11,14 L 34,14" style="fill:none; stroke:#000000; stroke-linejoin:miter;" /> </g>'),
+  wB: svg('<g style="opacity:1; fill:none; fill-rule:evenodd; fill-opacity:1; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.6)"> <g style="fill:#ffffff; stroke:#000000; stroke-linecap:butt;"> <path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.65,38.99 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/> <path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/> <path d="M 25 8 A 2.5 2.5 0 1 1 20,8 A 2.5 2.5 0 1 1 25 8 z"/> </g> <path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" style="fill:none; stroke:#000000; stroke-linejoin:miter;"/> </g>'),
+  wN: svg('<g style="opacity:1; fill:none; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"> <path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" style="fill:#ffffff; stroke:#000000;" /> <path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" style="fill:#ffffff; stroke:#000000;" /> <path d="M 9.5 25.5 A 0.5 0.5 0 1 1 8.5,25.5 A 0.5 0.5 0 1 1 9.5 25.5 z" style="fill:#000000; stroke:#000000;" /> <path d="M 15 15.5 A 0.5 1.5 0 1 1 14,15.5 A 0.5 1.5 0 1 1 15 15.5 z" transform="matrix(0.866,0.5,-0.5,0.866,9.693,-5.173)" style="fill:#000000; stroke:#000000;" /> </g>'),
+  wP: svg('<path d="m 22.5,9 c -2.21,0 -4,1.79 -4,4 0,0.89 0.29,1.71 0.78,2.38 C 17.33,16.5 16,18.59 16,21 c 0,2.03 0.94,3.84 2.41,5.03 C 15.41,27.09 11,31.58 11,39.5 H 34 C 34,31.58 29.59,27.09 26.59,26.03 28.06,24.84 29,23.03 29,21 29,18.59 27.67,16.5 25.72,15.38 26.21,14.71 26.5,13.89 26.5,13 c 0,-2.21 -1.79,-4 -4,-4 z" style="opacity:1; fill:#ffffff; fill-opacity:1; fill-rule:nonzero; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:miter; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;"/>'),
+  bK: svg('<g style="fill:none; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;"> <path d="M 22.5,11.63 L 22.5,6" style="fill:none; stroke:#000000; stroke-linejoin:miter;"/> <path d="M 22.5,25 C 22.5,25 27,17.5 25.5,14.5 C 25.5,14.5 24.5,12 22.5,12 C 20.5,12 19.5,14.5 19.5,14.5 C 18,17.5 22.5,25 22.5,25" style="fill:#000000;fill-opacity:1; stroke-linecap:butt; stroke-linejoin:miter;"/> <path d="M 12.5,37 C 18,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19.5 C 34.5,13 25,16 22.5,23.5 L 22.5,27 L 22.5,23.5 C 20,16 10.5,13 6.5,19.5 C 3.5,25.5 12.5,30 12.5,30 L 12.5,37" style="fill:#000000; stroke:#000000;"/> <path d="M 20,8 L 25,8" style="fill:none; stroke:#000000; stroke-linejoin:miter;"/> <path d="M 32,29.5 C 32,29.5 40.5,25.5 38.03,19.85 C 34.15,14 25,18 22.5,24.5 L 22.5,26.6 L 22.5,24.5 C 20,18 10.85,14 6.97,19.85 C 4.5,25.5 13,29.5 13,29.5" style="fill:none; stroke:#ffffff;"/> <path d="M 12.5,30 C 18,27 27,27 32.5,30 M 12.5,33.5 C 18,30.5 27,30.5 32.5,33.5 M 12.5,37 C 18,34 27,34 32.5,37" style="fill:none; stroke:#ffffff;"/> </g>'),
+  bQ: svg('<g style="fill:#000000;stroke:#000000;stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round"> <path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z" style="stroke-linecap:butt;fill:#000000" /> <path d="m 9,26 c 0,2 1.5,2 2.5,4 1,1.5 1,1 0.5,3.5 -1.5,1 -1,2.5 -1,2.5 -1.5,1.5 0,2.5 0,2.5 6.5,1 16.5,1 23,0 0,0 1.5,-1 0,-2.5 0,0 0.5,-1.5 -1,-2.5 -0.5,-2.5 -0.5,-2 0.5,-3.5 1,-2 2.5,-2 2.5,-4 -8.5,-1.5 -18.5,-1.5 -27,0 z" /> <path d="M 11.5,30 C 15,29 30,29 33.5,30" /> <path d="m 12,33.5 c 6,-1 15,-1 21,0" /> <circle cx="6" cy="12" r="2" /> <circle cx="14" cy="9" r="2" /> <circle cx="22.5" cy="8" r="2" /> <circle cx="31" cy="9" r="2" /> <circle cx="39" cy="12" r="2" /> <path d="M 11,38.5 A 35,35 1 0 0 34,38.5" style="fill:none; stroke:#000000;stroke-linecap:butt;" /> <g style="fill:none; stroke:#ffffff;"> <path d="M 11,29 A 35,35 1 0 1 34,29" /> <path d="M 12.5,31.5 L 32.5,31.5" /> <path d="M 11.5,34.5 A 35,35 1 0 0 33.5,34.5" /> <path d="M 10.5,37.5 A 35,35 1 0 0 34.5,37.5" /> </g> </g>'),
+  bR: svg('<g style="opacity:1; fill:#000000; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"> <path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z " style="stroke-linecap:butt;" /> <path d="M 12.5,32 L 14,29.5 L 31,29.5 L 32.5,32 L 12.5,32 z " style="stroke-linecap:butt;" /> <path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z " style="stroke-linecap:butt;" /> <path d="M 14,29.5 L 14,16.5 L 31,16.5 L 31,29.5 L 14,29.5 z " style="stroke-linecap:butt;stroke-linejoin:miter;" /> <path d="M 14,16.5 L 11,14 L 34,14 L 31,16.5 L 14,16.5 z " style="stroke-linecap:butt;" /> <path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14 L 11,14 z " style="stroke-linecap:butt;" /> <path d="M 12,35.5 L 33,35.5 L 33,35.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;" /> <path d="M 13,31.5 L 32,31.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;" /> <path d="M 14,29.5 L 31,29.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;" /> <path d="M 14,16.5 L 31,16.5" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;" /> <path d="M 11,14 L 34,14" style="fill:none; stroke:#ffffff; stroke-width:1; stroke-linejoin:miter;" /> </g>'),
+  bB: svg('<g style="opacity:1; fill:none; fill-rule:evenodd; fill-opacity:1; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.6)"> <g style="fill:#000000; stroke:#000000; stroke-linecap:butt;"> <path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.65,38.99 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/> <path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/> <path d="M 25 8 A 2.5 2.5 0 1 1 20,8 A 2.5 2.5 0 1 1 25 8 z"/> </g> <path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" style="fill:none; stroke:#ffffff; stroke-linejoin:miter;"/> </g>'),
+  bN: svg('<g style="opacity:1; fill:none; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;" transform="translate(0,0.3)"> <path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" style="fill:#000000; stroke:#000000;" /> <path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" style="fill:#000000; stroke:#000000;" /> <path d="M 9.5 25.5 A 0.5 0.5 0 1 1 8.5,25.5 A 0.5 0.5 0 1 1 9.5 25.5 z" style="fill:#ffffff; stroke:#ffffff;" /> <path d="M 15 15.5 A 0.5 1.5 0 1 1 14,15.5 A 0.5 1.5 0 1 1 15 15.5 z" transform="matrix(0.866,0.5,-0.5,0.866,9.693,-5.173)" style="fill:#ffffff; stroke:#ffffff;" /> <path d="M 24.55,10.4 L 24.1,11.85 L 24.6,12 C 27.75,13 30.25,14.49 32.5,18.75 C 34.75,23.01 35.75,29.06 35.25,39 L 35.2,39.5 L 37.45,39.5 L 37.5,39 C 38,28.94 36.62,22.15 34.25,17.66 C 31.88,13.17 28.46,11.02 25.06,10.5 L 24.55,10.4 z " style="fill:#ffffff; stroke:none;" /> </g>'),
+  bP: svg('<path d="m 22.5,9 c -2.21,0 -4,1.79 -4,4 0,0.89 0.29,1.71 0.78,2.38 C 17.33,16.5 16,18.59 16,21 c 0,2.03 0.94,3.84 2.41,5.03 C 15.41,27.09 11,31.58 11,39.5 H 34 C 34,31.58 29.59,27.09 26.59,26.03 28.06,24.84 29,23.03 29,21 29,18.59 27.67,16.5 25.72,15.38 26.21,14.71 26.5,13.89 26.5,13 c 0,-2.21 -1.79,-4 -4,-4 z" style="opacity:1; fill:#000000; fill-opacity:1; fill-rule:nonzero; stroke:#000000; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:miter; stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;"/>'),
 };
-
-/* -------------------------------------------------------------------------
- * Flat — geometric, no outline, reads cleanly at small sizes.
- * ---------------------------------------------------------------------- */
-
-const flatFoot = `<rect x="11" y="33.4" width="23" height="5.2" rx="2.6"/>`;
-
-/** @type {Record<string, (c: Palette) => string>} */
-const FLAT = {
-  P: () => `
-    <circle cx="22.5" cy="13.4" r="5.2"/>
-    <path d="M15.9 33.4c0-6.6 3.4-9.6 6.6-14.8 3.2 5.2 6.6 8.2 6.6 14.8z"/>
-    ${flatFoot}`,
-
-  R: () => `
-    <path d="M12 8.6h5.2v3.6h2.7V8.6h5.2v3.6h2.7V8.6H33v11H12z"/>
-    <path d="M14 19.6h17l-1.5 13.8H15.5z"/>
-    ${flatFoot}`,
-
-  N: (c) => `
-    <path d="M26 7c2.4 1.8 4 4.4 4.8 7.6 1.4 5 1.8 10.6 1.8 17.8H15.2c0-3.6 1.4-6.4 3.8-8.4l-5 2.6c-2 1-3.4-1-2.2-3 1.6-2.8 3.8-5 6.6-6.8 2.8-1.8 4.8-4 5.8-7z"/>
-    <circle cx="20.4" cy="17.6" r="1.5" fill="${c.accent}" stroke="none"/>
-    ${flatFoot}`,
-
-  B: () => `
-    <circle cx="22.5" cy="6.6" r="2.7"/>
-    <path d="M22.5 11.4c5.2 5 7.8 9.8 7.8 13.8 0 4.4-3.5 7-7.8 7s-7.8-2.6-7.8-7c0-4 2.6-8.8 7.8-13.8z"/>
-    ${flatFoot}`,
-
-  Q: () => `
-    <circle cx="10.6" cy="12" r="2.6"/>
-    <circle cx="16.6" cy="8.6" r="2.6"/>
-    <circle cx="22.5" cy="7.4" r="2.8"/>
-    <circle cx="28.4" cy="8.6" r="2.6"/>
-    <circle cx="34.4" cy="12" r="2.6"/>
-    <path d="M10.6 13.6l5 18.8h13.8l5-18.8-6 8-6-10.4-6 10.4z"/>
-    ${flatFoot}`,
-
-  K: () => `
-    <path d="M20.7 3.8h3.6v3.8h3.8v3.6h-3.8v6.6h-3.6v-6.6h-3.8V7.6h3.8z"/>
-    <path d="M14.6 33.4c-.4-8.8 1.8-16.6 7.9-16.6s8.3 7.8 7.9 16.6z"/>
-    ${flatFoot}`,
-};
-
-/** @type {Record<string, {shapes: Record<string, (c: Palette) => string>, outline: boolean, palettes: {w: Palette, b: Palette}}>} */
-const DEFINITIONS = {
-  classic: {
-    shapes: CLASSIC,
-    outline: true,
-    palettes: {
-      w: { fill: '#f7f6f3', stroke: '#25221e', accent: '#25221e' },
-      b: { fill: '#2b2825', stroke: '#100e0c', accent: '#efece6' },
-    },
-  },
-  flat: {
-    shapes: FLAT,
-    outline: false,
-    palettes: {
-      w: { fill: '#fbfbfa', stroke: 'none', accent: '#33302c' },
-      b: { fill: '#33302c', stroke: 'none', accent: '#fbfbfa' },
-    },
-  },
-};
-
-/**
- * Expand a definition into the twelve-key map the renderer consumes.
- * @param {typeof DEFINITIONS[string]} definition
- * @returns {PieceSet}
- */
-function buildSet({ shapes, outline, palettes }) {
-  /** @type {PieceSet} */
-  const set = {};
-  for (const color of /** @type {const} */ (['w', 'b'])) {
-    const palette = palettes[color];
-    const strokeAttrs = outline
-      ? ` stroke="${palette.stroke}" stroke-width="1.5" stroke-linejoin="round"`
-      : '';
-    for (const [type, shape] of Object.entries(shapes)) {
-      set[color + type] = svg(
-        `<g fill="${palette.fill}"${strokeAttrs}>${shape(palette)}</g>`,
-      );
-    }
-  }
-  return set;
-}
 
 /** @type {Record<string, PieceSet>} */
-export const pieceThemes = Object.fromEntries(
-  Object.entries(DEFINITIONS).map(([name, definition]) => [name, buildSet(definition)]),
-);
+export const pieceThemes = {
+  cburnett: CBURNETT,
+};
 
-export const DEFAULT_PIECE_THEME = 'classic';
+export const DEFAULT_PIECE_THEME = 'cburnett';
 
 export const PIECE_CODES = [
   'wK', 'wQ', 'wR', 'wB', 'wN', 'wP',

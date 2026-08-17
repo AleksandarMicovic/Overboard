@@ -44,7 +44,8 @@ function flatten(source) {
 const banner = `/**
  * Overboard ${JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version}
  * A dependency-free chess board viewer. https://github.com/AleksandarMicovic/Overboard
- * MIT licensed. Built from src/ by build.js — edit the source, not this file.
+ * Code: MIT licensed. Built from src/ by build.js — edit the source, not this file.
+ * Bundled Cburnett piece art: © Colin M.L. Burnett, CC BY-SA 3.0 — see README Attribution.
  */`;
 
 const body = MODULES.map((name) => {

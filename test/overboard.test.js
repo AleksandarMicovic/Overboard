@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 
 import { Overboard } from '../src/overboard.js';
 import { STARTING_FEN } from '../src/position.js';
+import { PIECE_CODES, pieceThemes } from '../src/pieces.js';
 import { highlightsOf, makeDom, piecesOf } from './dom-stub.js';
 
 /** A board on a fresh document. */
@@ -27,6 +28,17 @@ function record(board, names) {
 
 const ALL_EVENTS = ['move', 'position', 'capture', 'promotion', 'castle',
   'check', 'checkmate', 'stalemate', 'annotation', 'error'];
+
+/**
+ * A minimal registered theme used to verify that assigning `pieceTheme`
+ * actually swaps the rendered markup, rather than just parroting back
+ * whatever string was stored.
+ */
+const MARKER_PIECES = Object.fromEntries(
+  ['wK', 'wQ', 'wR', 'wB', 'wN', 'wP', 'bK', 'bQ', 'bR', 'bB', 'bN', 'bP']
+    .map((code) => [code, `<svg data-code="${code}"></svg>`]),
+);
+Overboard.registerPieceTheme('marker', MARKER_PIECES);
 
 const OPERA = `1.e4 e5 2.Nf3 d6 3.d4 Bg4 4.dxe5 Bxf3 5.Qxf3 dxe5 6.Bc4 Nf6 7.Qb3 Qe7
 8.Nc3 c6 9.Bg5 b5 10.Nxb5 cxb5 11.Bxb5+ Nbd7 12.O-O-O Rd8 13.Rxd7 Rxd7
@@ -48,7 +60,7 @@ test('the documented defaults are the actual defaults', () => {
   assert.equal(board.showCoordinates, false, 'coordinates off by default');
   assert.equal(board.orientation, 'white');
   assert.equal(board.boardTheme, 'brown');
-  assert.equal(board.pieceTheme, 'classic');
+  assert.equal(board.pieceTheme, 'cburnett');
   assert.equal(board.animation, 200);
   assert.equal(board.highlightLastMove, true);
 });
@@ -65,7 +77,7 @@ test('options given at construction are applied', () => {
     orientation: 'black',
     showCoordinates: true,
     boardTheme: 'green',
-    pieceTheme: 'flat',
+    pieceTheme: 'marker',
     animation: 0,
     highlightLastMove: false,
   });
@@ -73,7 +85,12 @@ test('options given at construction are applied', () => {
   assert.equal(board.orientation, 'black');
   assert.equal(board.showCoordinates, true);
   assert.equal(board.element.style.getPropertyValue('--ob-light'), '#eeeed2');
-  assert.equal(board.pieceTheme, 'flat');
+  assert.equal(board.pieceTheme, 'marker');
+  assert.match(
+    board.element.querySelectorAll('.ob-piece')[0].innerHTML,
+    /data-code=/,
+    'the requested theme actually rendered, not just the stored option string',
+  );
 });
 
 test('a missing container is an error, not a silent no-op', () => {
@@ -97,8 +114,13 @@ test('every option is also settable after construction', () => {
   board.boardTheme = 'ink';
   assert.equal(board.element.style.getPropertyValue('--ob-dark'), '#33373b');
 
-  board.pieceTheme = 'flat';
-  assert.equal(board.pieceTheme, 'flat');
+  board.pieceTheme = 'marker';
+  assert.equal(board.pieceTheme, 'marker');
+  assert.match(
+    board.element.querySelectorAll('.ob-piece')[0].innerHTML,
+    /data-code=/,
+    'the requested theme actually rendered, not just the stored option string',
+  );
 
   board.animation = 0;
   assert.equal(board.animation, 0);
@@ -468,6 +490,15 @@ test('custom themes can be registered and used', () => {
     board.element.querySelectorAll('.ob-piece')[0].innerHTML,
     /data-code=/,
   );
+});
+
+test('the bundled cburnett theme has all twelve pieces, each scalable and drawn', () => {
+  for (const code of PIECE_CODES) {
+    const markup = pieceThemes.cburnett[code];
+    assert.ok(markup, `${code} is present`);
+    assert.match(markup, /viewBox="0 0 45 45"/, `${code} has a viewBox to scale by`);
+    assert.match(markup, /<path/, `${code} actually draws something`);
+  }
 });
 
 test('an incomplete piece theme is rejected, naming what is missing', () => {

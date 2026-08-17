@@ -56,7 +56,7 @@ const board = new Overboard('#board', {
   pgn: null,           // a PGN game; wins over `fen` if both are given
   orientation: 'white',
   showCoordinates: false,
-  pieceTheme: 'classic',
+  pieceTheme: 'cburnett',
   boardTheme: 'brown', // a name, or { light, dark }
   animation: 200,      // ms; 0 disables
   highlightLastMove: true,
@@ -129,8 +129,9 @@ Overboard.registerBoardTheme('midnight', { light: '#8b93a8', dark: '#2c3244' });
 
 Built in: `brown` (default), `wood`, `blue`, `green`, `slate`, `ink`, `rose`.
 
-Pieces are SVG. Two sets ship — `classic` (outlined, Staunton-derived) and `flat`
-(geometric, reads well at small sizes) — and a custom set is just twelve strings:
+Pieces are SVG. One set ships — `cburnett`, the Wikimedia Commons set drawn by
+Colin M.L. Burnett — and it's also the default. A custom set is just twelve
+strings:
 
 ```js
 Overboard.registerPieceTheme('mine', {
@@ -140,8 +141,8 @@ Overboard.registerPieceTheme('mine', {
 board.pieceTheme = 'mine';
 ```
 
-Both bundled sets were drawn for this project, so Overboard carries no third-party
-asset licenses.
+`cburnett` is third-party art, not written for this project — see Attribution
+below for the license and required credit.
 
 ## Events
 
@@ -246,6 +247,27 @@ Move generation is verified with [perft](https://www.chessprogramming.org/Perft)
 against the six standard test positions — a wrong castling right or a missed en
 passant shows up as a node-count mismatch.
 
+## Attribution
+
+The bundled piece set (`cburnett`, the default and, for now, the only one) is the
+[Cburnett](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces) set,
+drawn by [Colin M.L. Burnett](https://en.wikipedia.org/wiki/User:Cburnett) and
+published on Wikimedia Commons under
+[CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) — the
+same artwork used by Wikipedia and Lichess.
+
+The SVGs are bundled in modified form: each piece's path data and styling are
+unchanged from the original, but the twelve files were combined into one
+module, `id` attributes were stripped to avoid collisions across pieces on the
+same page, and a `viewBox` was added in place of fixed pixel dimensions so
+each piece scales with its square. See the header comment in `src/pieces.js`
+for the exact transforms.
+
+Because CC BY-SA is a share-alike license, any modified redistribution of
+this artwork specifically (not the rest of Overboard) must itself carry
+CC BY-SA 3.0 and credit the original. See `LICENSE` for the formal notice.
+
 ## License
 
-MIT.
+Code: MIT. Bundled `cburnett` piece art: CC BY-SA 3.0 (see Attribution above
+and `LICENSE`).

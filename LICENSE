@@ -19,3 +19,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+The MIT license above covers Overboard's code. It does not cover the bundled
+chess piece SVGs in `src/pieces.js` and `dist/overboard.js` (the `cburnett`
+theme), which are © Colin M.L. Burnett and licensed separately under
+Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0):
+https://creativecommons.org/licenses/by-sa/3.0/deed.en
+
+See the README's Attribution section for the source, the modifications made,
+and what CC BY-SA's share-alike terms require of anyone redistributing that
+artwork in modified form.

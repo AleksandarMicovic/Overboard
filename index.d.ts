@@ -55,8 +55,8 @@ export interface OverboardOptions {
   orientation?: Orientation;
   /** Default `false`. */
   showCoordinates?: boolean;
-  /** Registered theme name. Default `'classic'`. */
-  pieceTheme?: string;
+  /** Registered theme name, or an inline set of twelve piece SVGs. Default `'cburnett'`. */
+  pieceTheme?: string | PieceSet;
   /** Theme name or an inline pair of colors. Default `'brown'`. */
   boardTheme?: string | BoardTheme;
   /** Move animation in milliseconds. `0` disables. Default `200`. */

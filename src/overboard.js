@@ -52,7 +52,7 @@ import {
  * @property {string} [pgn] A PGN game. Overrides `fen` when both are given.
  * @property {'white'|'black'} [orientation] Default 'white'.
  * @property {boolean} [showCoordinates] Default false.
- * @property {string} [pieceTheme] Default 'classic'.
+ * @property {string} [pieceTheme] Default 'cburnett'.
  * @property {string|{light: string, dark: string}} [boardTheme] Default 'brown'.
  * @property {number} [animation] Milliseconds. Default 200. 0 disables.
  * @property {boolean} [highlightLastMove] Default true.
