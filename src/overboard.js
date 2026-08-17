@@ -45,6 +45,8 @@ import {
 
 /** @typedef {import('./pgn.js').PgnMove} PgnMove */
 /** @typedef {import('./position.js').Position} Position */
+/** @typedef {import('./pieces.js').PieceSet} PieceSet */
+/** @typedef {import('./themes.js').BoardTheme} BoardTheme */
 
 /**
  * @typedef {object} OverboardOptions
@@ -52,12 +54,25 @@ import {
  * @property {string} [pgn] A PGN game. Overrides `fen` when both are given.
  * @property {'white'|'black'} [orientation] Default 'white'.
  * @property {boolean} [showCoordinates] Default false.
- * @property {string} [pieceTheme] Default 'cburnett'.
- * @property {string|{light: string, dark: string}} [boardTheme] Default 'brown'.
+ * @property {string|PieceSet} [pieceTheme] Default 'cburnett'.
+ * @property {string|BoardTheme} [boardTheme] Default 'brown'.
  * @property {number} [animation] Milliseconds. Default 200. 0 disables.
  * @property {boolean} [highlightLastMove] Default true.
  */
 
+/**
+ * @typedef {object} ResolvedOptions Every option, defaulted.
+ * @property {string} fen
+ * @property {string|null} pgn
+ * @property {'white'|'black'} orientation
+ * @property {boolean} showCoordinates
+ * @property {string|PieceSet} pieceTheme
+ * @property {string|BoardTheme} boardTheme
+ * @property {number} animation
+ * @property {boolean} highlightLastMove
+ */
+
+/** @type {ResolvedOptions} */
 const DEFAULTS = {
   fen: 'start',
   pgn: null,
@@ -106,9 +121,10 @@ export class Overboard {
   /** @type {Map<string, Set<Function>>} */
   #listeners = new Map();
 
+  /** @type {ResolvedOptions} */
   #options = { ...DEFAULTS };
 
-  /** @type {Record<string, string>} */
+  /** @type {PieceSet} */
   #pieceSet;
 
   /**
@@ -116,8 +132,9 @@ export class Overboard {
    * @param {OverboardOptions} [options]
    */
   constructor(target, options = {}) {
-    const container =
-      typeof target === 'string' ? document.querySelector(target) : target;
+    const container = /** @type {HTMLElement|null} */ (
+      typeof target === 'string' ? document.querySelector(target) : target
+    );
     if (!container) throw new Error(`Overboard: no element matching ${target}`);
 
     this.#options = { ...DEFAULTS, ...options };
@@ -257,7 +274,7 @@ export class Overboard {
     return this.#options.boardTheme;
   }
 
-  /** @param {string|{light: string, dark: string}} value */
+  /** @param {string|BoardTheme} value */
   set boardTheme(value) {
     this.#options.boardTheme = value;
     this.#renderer.setBoardTheme(resolveBoardTheme(value));
@@ -267,7 +284,7 @@ export class Overboard {
     return this.#options.pieceTheme;
   }
 
-  /** @param {string|Record<string, string>} value */
+  /** @param {string|PieceSet} value */
   set pieceTheme(value) {
     this.#options.pieceTheme = value;
     this.#pieceSet = resolvePieceTheme(value);
@@ -428,8 +445,9 @@ export class Overboard {
    */
   on(name, listener) {
     if (typeof listener !== 'function') throw new TypeError('Listener must be a function');
-    if (!this.#listeners.has(name)) this.#listeners.set(name, new Set());
-    this.#listeners.get(name).add(listener);
+    const listeners = this.#listeners.get(name) ?? new Set();
+    this.#listeners.set(name, listeners);
+    listeners.add(listener);
     return () => this.off(name, listener);
   }
 
